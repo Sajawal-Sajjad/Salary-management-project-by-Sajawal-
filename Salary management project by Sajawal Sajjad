@@ -6,52 +6,60 @@ Nauman Haider F21BSEEN1E02035: https://github.com/Noman-Haider/Salary-management
 Shoaib Ahmad F21BSEEN1E02039: https://github.com/ShoaibIUB/Shoaib-Ahmad-F21BSEEN1E02039
 
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+import requests
 
 class SalaryManagementSystem:
     def __init__(self, root):
         self.root = root
         self.root.title("Salary Management System")
 
-        self.employee_data = {}  # Dictionary to store employee details and templates
+        # Treeview to display employee data
+        self.tree = ttk.Treeview(self.root, columns=('ID', 'Name', 'Position', 'Hours Worked', 'Net Salary'), show='headings')
+        self.tree.heading('ID', text='ID')
+        self.tree.heading('Name', text='Name')
+        self.tree.heading('Position', text='Position')
+        self.tree.heading('Hours Worked', text='Hours Worked')
+        self.tree.heading('Net Salary', text='Net Salary')
+        self.tree.pack()
 
+        # Entry fields for adding new employee
         self.name_label = tk.Label(root, text="Employee Name:")
-        self.name_label.grid(row=0, column=0, padx=10, pady=10)
+        self.name_label.pack()
         self.name_entry = tk.Entry(root)
-        self.name_entry.grid(row=0, column=1, padx=10, pady=10)
+        self.name_entry.pack()
 
         self.position_label = tk.Label(root, text="Position:")
-        self.position_label.grid(row=1, column=0, padx=10, pady=10)
+        self.position_label.pack()
         self.position_var = tk.StringVar()
         self.position_var.set("Software Developer")  # Default position
         self.position_dropdown = tk.OptionMenu(root, self.position_var, "Software Developer", "Manager", "Intern")
-        self.position_dropdown.grid(row=1, column=1, padx=10, pady=10)
+        self.position_dropdown.pack()
 
         self.hours_worked_label = tk.Label(root, text="Hours Worked:")
-        self.hours_worked_label.grid(row=2, column=0, padx=10, pady=10)
+        self.hours_worked_label.pack()
         self.hours_worked_entry = tk.Entry(root)
-        self.hours_worked_entry.grid(row=2, column=1, padx=10, pady=10)
-
-        self.bills_label = tk.Label(root, text="Bills:")
-        self.bills_label.grid(row=3, column=0, padx=10, pady=10)
+        self.hours_worked_entry.pack()
 
         self.bill_type_label = tk.Label(root, text="Bill Type:")
-        self.bill_type_label.grid(row=4, column=0, padx=10, pady=10)
+        self.bill_type_label.pack()
         self.bill_type_entry = tk.Entry(root)
-        self.bill_type_entry.grid(row=4, column=1, padx=10, pady=10)
+        self.bill_type_entry.pack()
 
         self.bill_amount_label = tk.Label(root, text="Bill Amount:")
-        self.bill_amount_label.grid(row=5, column=0, padx=10, pady=10)
+        self.bill_amount_label.pack()
         self.bill_amount_entry = tk.Entry(root)
-        self.bill_amount_entry.grid(row=5, column=1, padx=10, pady=10)
+        self.bill_amount_entry.pack()
 
-        self.calculate_button = tk.Button(root, text="Calculate Salary", command=self.calculate_salary)
-        self.calculate_button.grid(row=6, column=0, columnspan=2, pady=10)
+        # Button to calculate salary and add employee
+        self.calculate_button = tk.Button(root, text="Calculate Salary", command=self.calculate_and_add_employee)
+        self.calculate_button.pack()
 
-        self.report_button = tk.Button(root, text="Generate Salary Report", command=self.generate_salary_report)
-        self.report_button.grid(row=7, column=0, columnspan=2, pady=10)
+        # Button to refresh the employee data in Treeview
+        self.refresh_button = tk.Button(root, text='Refresh', command=self.refresh_data)
+        self.refresh_button.pack()
 
-    def calculate_salary(self):
+    def calculate_and_add_employee(self):
         try:
             employee_name = self.name_entry.get()
             position = self.position_var.get()
@@ -79,39 +87,50 @@ class SalaryManagementSystem:
                 # Calculate net salary by deducting bills
                 net_salary = salary - bill_amount
 
-                # Store employee details and templates
-                self.employee_data[employee_name] = {
-                    "position": position,
-                    "hours_worked": hours_worked,
-                    "hourly_rate": hourly_rate,
-                    "bonus": bonus,
-                    "bills": {bill_type: bill_amount},
-                    "salary": salary,
-                    "net_salary": net_salary
+                # Make API call to store employee details
+                api_url = 'http://127.0.0.1:5000/calculate_salary'
+                payload = {
+                    'name': employee_name,
+                    'position': position,
+                    'hours_worked': hours_worked,
+                    'bill_type': bill_type,
+                    'bill_amount': bill_amount,
+                    'salary': salary,
+                    'net_salary': net_salary
                 }
+                response = requests.post(api_url, json=payload)
 
-                messagebox.showinfo("Salary Details", f"Employee: {employee_name}\n"
-                                                      f"Position: {position}\n"
-                                                      f"Hours Worked: {hours_worked}\n"
-                                                      f"Hourly Rate: {hourly_rate}\n"
-                                                      f"Bonus: {bonus}\n"
-                                                      f"Bills - {bill_type}: {bill_amount}\n"
-                                                      f"Salary: {salary}\n"
-                                                      f"Net Salary: {net_salary}")
+                if response.status_code == 201:
+                    messagebox.showinfo("Salary Details", f"Employee: {employee_name}\n"
+                                                          f"Position: {position}\n"
+                                                          f"Hours Worked: {hours_worked}\n"
+                                                          f"Hourly Rate: {hourly_rate}\n"
+                                                          f"Bonus: {bonus}\n"
+                                                          f"Bills - {bill_type}: {bill_amount}\n"
+                                                          f"Salary: {salary}\n"
+                                                          f"Net Salary: {net_salary}")
+                else:
+                    messagebox.showerror("Error", "Failed to store salary details.")
             else:
                 messagebox.showerror("Error", "Invalid position selected.")
         except ValueError:
             messagebox.showerror("Error", "Please enter valid numeric values for Hours Worked and Bill Amount.")
 
-    def generate_salary_report(self):
-        report_text = "Salary Report:\n\n"
-        for employee_name, employee_details in self.employee_data.items():
-            report_text += f"Employee: {employee_name}\n" \
-                           f"Position: {employee_details['position']}\n" \
-                           f"Net Salary: {employee_details['net_salary']}\n\n"
-        messagebox.showinfo("Salary Report", report_text)
+    def refresh_data(self):
+        self.tree.delete(*self.tree.get_children())
+        response = requests.get('http://127.0.0.1:5000/employees')
+        employees = response.json()
 
-if __name__ == "__main__":
+        for employee in employees:
+            self.tree.insert('', 'end', values=(
+                employee['id'],
+                employee['name'],
+                employee['position'],
+                employee['hours_worked'],
+                employee['net_salary']
+            ))
+
+if __name__ == '__main__':
     root = tk.Tk()
     app = SalaryManagementSystem(root)
     root.mainloop()
