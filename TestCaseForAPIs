@@ -1,0 +1,54 @@
+import unittest
+import requests
+
+class TestSalaryManagementSystem(unittest.TestCase):
+    base_url = 'http://localhost:5000'
+
+    def test_calculate_salary(self):
+        # Calculate salary for an employee
+        payload = {
+            'name': 'John Doe',
+            'position': 'Software Developer',
+            'hours_worked': 40,
+            'bill_type': 'Internet',
+            'bill_amount': 50
+        }
+        response = requests.post(f'{self.base_url}/calculate_salary', json=payload)
+        self.assertEqual(response.status_code, 201)
+
+        # Retrieve all employees
+        response = requests.get(f'{self.base_url}/employees')
+        self.assertEqual(response.status_code, 200)
+        employees = response.json()
+        self.assertTrue(len(employees) > 0)
+
+        # Update the calculated salary for the employee
+        updated_data = {
+            'name': 'John Doe',
+            'position': 'Software Developer',
+            'hours_worked': 45,
+            'bill_type': 'Internet',
+            'bill_amount': 60
+        }
+        response = requests.put(f'{self.base_url}/employee/John Doe', json=updated_data)
+        self.assertEqual(response.status_code, 200)
+
+        # Retrieve the updated employee
+        response = requests.get(f'{self.base_url}/employee/John Doe')
+        self.assertEqual(response.status_code, 200)
+        updated_employee = response.json()
+        self.assertEqual(updated_employee['hours_worked'], 45)
+
+        # Delete the updated employee
+        response = requests.delete(f'{self.base_url}/employee/John Doe')
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_employees(self):
+        # Retrieve all employees
+        response = requests.get(f'{self.base_url}/employees')
+        self.assertEqual(response.status_code, 200)
+        employees = response.json()
+        self.assertTrue(len(employees) > 0)
+
+if __name__ == '__main__':
+    unittest.main()
