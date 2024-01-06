@@ -1,0 +1,46 @@
+from flask import Flask, request, jsonify
+from flask_pymongo import PyMongo
+
+app = Flask(__name__)
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/salary_management'
+mongo = PyMongo(app)
+
+@app.route('/calculate_salary', methods=['POST'])
+def calculate_salary():
+    data = request.get_json()
+
+    hourly_rate, bonus = get_salary_template(data['position'])
+
+    salary = data['hours_worked'] * hourly_rate + bonus
+
+    net_salary = salary - data['bill_amount']
+
+    employee_data = {
+        'name': data['name'],
+        'position': data['position'],
+        'hours_worked': data['hours_worked'],
+        'bill_type': data['bill_type'],
+        'bill_amount': data['bill_amount'],
+        'salary': salary,
+        'net_salary': net_salary
+    }
+
+    mongo.db.employees.insert_one(employee_data)
+
+    return jsonify({'message': 'Salary details added successfully'}), 201
+
+@app.route('/employees', methods=['GET'])
+def get_employees():
+    employees = list(mongo.db.employees.find({}, {'_id': 0}))
+    return jsonify(employees)
+
+def get_salary_template(position):
+    salary_templates = {
+        "Software Developer": {"hourly_rate": 30, "bonus": 500},
+        "Manager": {"hourly_rate": 40, "bonus": 1000},
+        "Intern": {"hourly_rate": 15, "bonus": 100}
+    }
+    return salary_templates.get(position, {"hourly_rate": 0, "bonus": 0})
+
+if __name__ == '__main__':
+    app.run(debug=True)
