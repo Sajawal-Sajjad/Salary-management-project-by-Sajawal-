@@ -1,9 +1,12 @@
-Group Leader:Sajawal Sajjad F21BSEEN1E02037
-https://github.com/Sajawal-Sajjad/Salary-management-project-by-Sajawal-/tree/main
-Group Members:-
-Maryam Bibi F21BSEEN1E02040: https://github.com/mrymch1753/Salery-Managment-System-By-Maryam
-Nauman Haider F21BSEEN1E02035: https://github.com/Noman-Haider/Salary-management-system/blob/main/README.md
-Shoaib Ahmad F21BSEEN1E02039: https://github.com/ShoaibIUB/Shoaib-Ahmad-F21BSEEN1E02039
+# Submitted by   : Sajawal Sajjad
+# Rollno         : F21BSEEN1E02037
+# Semester       : 5th
+# Section        : E1
+# Project        : Salary Management System
+# Submitted To   : Sir Nauman
+
+
+
 
 import tkinter as tk
 from tkinter import ttk, messagebox
