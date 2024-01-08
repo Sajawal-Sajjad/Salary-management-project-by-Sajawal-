@@ -7,40 +7,41 @@ mongo = PyMongo(app)
 
 @app.route('/calculate_salary', methods=['POST'])
 def calculate_salary():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    hourly_rate, bonus = get_salary_template(data['position'])
+        # Perform the salary calculation and MongoDB insertion here
+        # Assuming MongoDB collection named 'employees'
+        db = mongo.db.employees
 
-    salary = data['hours_worked'] * hourly_rate + bonus
+        # Assuming 'employee_id' is unique
+        existing_employee = db.find_one({'employee_id': data['employee_id']})
 
-    net_salary = salary - data['bill_amount']
+        if existing_employee:
+            return jsonify({'message': 'Employee ID already exists.'}), 400
 
-    employee_data = {
-        'name': data['name'],
-        'position': data['position'],
-        'hours_worked': data['hours_worked'],
-        'bill_type': data['bill_type'],
-        'bill_amount': data['bill_amount'],
-        'salary': salary,
-        'net_salary': net_salary
-    }
+        # Perform the salary calculation logic here
+        # ...
 
-    mongo.db.employees.insert_one(employee_data)
+        # Insert into MongoDB
+        db.insert_one(data)
 
-    return jsonify({'message': 'Salary details added successfully'}), 201
+        return jsonify({'message': 'Salary details stored successfully.'}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/employees', methods=['GET'])
 def get_employees():
-    employees = list(mongo.db.employees.find({}, {'_id': 0}))
-    return jsonify(employees)
+    try:
+        # Retrieve all employees from MongoDB
+        db = mongo.db.employees
+        employees = list(db.find({}, {'_id': 0}))
 
-def get_salary_template(position):
-    salary_templates = {
-        "Software Developer": {"hourly_rate": 30, "bonus": 500},
-        "Manager": {"hourly_rate": 40, "bonus": 1000},
-        "Intern": {"hourly_rate": 15, "bonus": 100}
-    }
-    return salary_templates.get(position, {"hourly_rate": 0, "bonus": 0})
+        return jsonify(employees), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
